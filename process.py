@@ -4,9 +4,24 @@ import numpy as np
 from ultralytics import YOLO
 import time
 
+
+# 设置模式
+# MODE = "VIDEOSTREAM" # 视频流模式
+VIDEOPATH = 2
+
+MODE = "PICTURE" # 图片模式
+PICTUREPATH = "src/test.jpg"
+
+# 用户名
+USERNAME = "patience"
+
+# 模型路径
+color_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/color_best.pt"
+ball_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/ball_best.pt"
+
 # 加载 YOLO 模型
-color_model = YOLO("/home/patience/Doc/Code/Python/TEST/runs/detect/color_train/weights/color_best.pt")
-ball_model = YOLO("/home/patience/Doc/Code/Python/TEST/runs/detect/ball_train/weights/ball_best.pt")
+color_model = YOLO(color_model_path)
+ball_model = YOLO(ball_model_path)
 
 # 计算 IOU（交并比）
 def compute_iou(box1, box2):
@@ -51,46 +66,63 @@ def process_frame(frame):
     # 画框显示结果
     for color_box, ball_box, color_class in matched_results:
         x1, y1, x2, y2 = ball_box
-        color_name = f"Color-{int(color_class)}"
-        
+        dict_color = {0: "red", 1: "blue", 2: "yellow", 3: "black"}
+        color_name = f"{dict_color[int(color_class)]}-ball"
+                
         cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
         cv2.putText(frame, color_name, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     return frame
 
-# 读取视频流
-cap = cv2.VideoCapture(2)  # 0 代表摄像头
-
-# 设置照片格式
-cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-
-# 设置自动曝光
-cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
-
-# 计算实际帧速率
-frame_count = 0
-start_time = time.time()
-
-while cap.isOpened():
-    ret, frame = cap.read()
+if MODE == "PICTURE":
+    print("Processing picture...")
+    
+    # 读取图片
+    frame = cv2.imread(PICTUREPATH)
     frame = cv2.resize(frame, (1080, 1080))
-    
-    if not ret:
-        break
-    
-    frame_count += 1
     processed_frame = process_frame(frame)
-    
-    # 计算并显示实际帧率
-    elapsed_time = time.time() - start_time
-    if elapsed_time > 0:
-        fps = frame_count / elapsed_time
-        print(f"Actual FPS: {fps:.2f}")
-    
+
     cv2.imshow("Result", processed_frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+if MODE == "VIDEOSTREAM":
+    print("Processing video stream...")
+    
+    # 读取视频流
+    cap = cv2.VideoCapture(VIDEOPATH)
 
-cap.release()
-cv2.destroyAllWindows()
+    # 设置照片格式
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+
+    # 设置自动曝光
+    cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+
+    # 计算实际帧速率
+    frame_count = 0
+    start_time = time.time()
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        frame = cv2.resize(frame, (1080, 1080))
+        
+        if not ret:
+            print("Can't receive frame (stream end?).")
+            break
+        
+        frame_count += 1
+        processed_frame = process_frame(frame)
+        
+        # 计算并显示实际帧率
+        elapsed_time = time.time() - start_time
+        if elapsed_time > 0:
+            fps = frame_count / elapsed_time
+            print(f"Actual FPS: {fps:.2f}")
+        
+        cv2.imshow("Result", processed_frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
