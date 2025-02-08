@@ -16,4 +16,4 @@
 
 - process.py 推理模型并处理
 - serial.py 读写串口
-- main.py 主程序g
+- main.py 主程序
