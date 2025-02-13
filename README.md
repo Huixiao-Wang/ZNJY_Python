@@ -5,17 +5,31 @@
 
 ``` bash
 .
+├── config.py
+├── infer.py
 ├── main.py
+├── message.py
 ├── model
 │   ├── ball
+│   │   ├── ball_best.onnx
 │   │   ├── ball_best.pt
+│   │   ├── best.onnx
+│   │   ├── best.pt
+│   │   ├── best_quantized.onnx
 │   │   └── color_best.pt
 │   └── zone
+│       └── best.pt
+├── new.py
+├── pix2cam.py
 ├── process.py
+├── __pycache__
+│   ├── config.cpython-39.pyc
+│   ├── infer.cpython-39.pyc
+│   └── pix2cam.cpython-39.pyc
 ├── PyEnv
 │   └── requirements.txt
 ├── README.md
-├── serial.py
+├── result.jpg
 └── src
     └── test.jpg
 ```
@@ -30,14 +44,24 @@ conda activate new
 
 - 安装 pip
 - 安装所需库
+- way1
 ``` bash
 pip install -r ./PyEnv/requirements.txt
+```
+- way2
+```bash
+pip install ultralytics opencv-python numpy torch torchvision matplotlib pyserial
 ```
 
 
 ### 使用说明
-- process.py 推理模型并处理
-    - MODE 视频或者图片模式
-    - USERNAME 改成设备的名称
-- serial.py 读写串口
+- config.py 储存配置信息
+- infer.py 推理模型并处理
+- pix2cam.py 像素坐标系转换至相机坐标系
+- message.py 读写串口
 - main.py 主程序
+
+### 待开发
+- new
+- process
+- **无法加载量化模型**

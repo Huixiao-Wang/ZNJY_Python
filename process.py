@@ -6,18 +6,18 @@ import time
 
 
 # 设置模式
-# MODE = "VIDEOSTREAM" # 视频流模式
+MODE = "VIDEOSTREAM" # 视频流模式
 VIDEOPATH = 2
 
-MODE = "PICTURE" # 图片模式
+# MODE = "PICTURE" # 图片模式
 PICTUREPATH = "src/test.jpg"
 
 # 用户名
 USERNAME = "patience"
 
 # 模型路径
-color_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/color_best.pt"
-ball_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/ball_best.pt"
+color_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/best.pt"
+ball_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/best.pt"
 
 # 加载 YOLO 模型
 color_model = YOLO(color_model_path)
@@ -79,10 +79,11 @@ if MODE == "PICTURE":
     
     # 读取图片
     frame = cv2.imread(PICTUREPATH)
-    frame = cv2.resize(frame, (1080, 1080))
+    frame = cv2.resize(frame, (640, 640))
     processed_frame = process_frame(frame)
 
     cv2.imshow("Result", processed_frame)
+        
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -103,8 +104,12 @@ if MODE == "VIDEOSTREAM":
     start_time = time.time()
 
     while cap.isOpened():
+        print("Processing frame...")
+        
+        start = time.time()
         ret, frame = cap.read()
-        frame = cv2.resize(frame, (1080, 1080))
+        print("dt==", time.time()-start)
+        frame = cv2.resize(frame, (640, 640))
         
         if not ret:
             print("Can't receive frame (stream end?).")
