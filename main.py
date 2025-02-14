@@ -13,11 +13,13 @@ def main():
         # 读取图片
         frame = cv2.imread(config.SOURCE_PATH)
         # 进行目标检测
-        centers, frame = infer.infer_yolo(frame, MODEL_TYPE)
+        centers, classes, frame = infer.infer_yolo(frame, MODEL_TYPE)
         # 将像素坐标转换为相机坐标
         camera_coordinates = pix2cam.process_centers(centers)
         print("检测到的ROI中心点：", centers)
+        print("检测到的ROI类别：", classes)
         print("归一化的相机坐标：", camera_coordinates)
+        
         for i in range(len(centers)):
             frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         px = 0
