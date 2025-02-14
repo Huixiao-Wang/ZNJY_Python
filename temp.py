@@ -14,7 +14,7 @@ ser = config.SER  # 串口对象
 MODEL_TYPE = 'ball'  # 'ball' or 'zone'
 
 # 处理图像
-def process_and_send_data(input_queue):
+def process_and_send_data():
     
     if config.SOURCE_TYPE == 'image':
         print("静态模式")
@@ -128,7 +128,7 @@ def process_and_send_data(input_queue):
     cv2.destroyAllWindows()
 
 # 接收线程
-def read_data(input_queue):
+def read_data():
     while True:
         if ser.in_waiting > 0:  # 如果串口缓冲区有数据
             data = ser.read(ser.in_waiting)  # 读取所有可用的数据

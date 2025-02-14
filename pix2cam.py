@@ -1,51 +1,59 @@
 import numpy as np
+import cv2
 import config
 
-# 相机内参矩阵
-f_x = config.F_X  # 水平焦距
-f_y = config.F_Y  # 垂直焦距
-c_x = config.C_X  # 图像中心 x
-c_y = config.C_Y  # 图像中心 y
 
 # 相机内参矩阵
-K = np.array([
-    [f_x, 0, c_x],
-    [0, f_y, c_y],
-    [0, 0, 1]
-])
+K = config.K
+
+distortion_coeffs = config.DISTORTION_COEFFS
 
 # 相机高度
 h = config.H
 
-def pixel_to_camera_coordinates(x_pixel, y_pixel):
+def pixel_to_camera_coordinates(pixel_coords):
     """
-    将像素坐标转换为归一化的相机坐标系坐标
-    :param x_pixel: 像素坐标 x
-    :param y_pixel: 像素坐标 y
-    :param K: 相机内参矩阵 (3x3)
-    :return: 归一化的相机坐标 (x_cam, y_cam, 1)
-    """
-    # 将像素坐标转为齐次坐标 (x_pixel, y_pixel, 1)
-    pixel_coordinates = np.array([x_pixel, y_pixel, 1])
+    将像素坐标系转换为相机坐标系。
     
-    # 计算相机坐标系下的归一化坐标
-    # 使用内参矩阵的逆矩阵来转换
-    K_inv = np.linalg.inv(K)
-    camera_coordinates = K_inv @ pixel_coordinates
-    camera_coordinates = -h * camera_coordinates
-    return camera_coordinates
+    参数:
+    - pixel_coords: (N, 2) 或 (N, 1, 2) 像素坐标数组 (u, v)，单位是像素
+    - K: 相机内参矩阵 (3x3)
+    - distortion_coeffs: 畸变参数，包含 [k1, k2, p1, p2, k3]
+    
+    返回:
+    - camera_coords: (N, 3) 相机坐标系坐标 (X, Y, Z)
+    """
+    # 检查输入是否为空
+    if pixel_coords is None or len(pixel_coords) == 0:
+        return np.array([])
+    
+    # 反畸变（去畸变）
+    pixel_coords = np.array(pixel_coords, dtype=np.float32)
+    
+    # OpenCV的去畸变函数要求是 (N, 1, 2) 形状，或者 (1, 2)
+    if pixel_coords.ndim == 2:
+        pixel_coords = pixel_coords.reshape(-1, 1, 2)
+    
+    undistorted_points = cv2.undistortPoints(pixel_coords, K, distortion_coeffs)
+    
+    # 去畸变后像素坐标是归一化的 (u', v')，可以直接用于相机坐标系的变换
+    # 归一化像素坐标 -> 相机坐标系坐标
+    # u' = X / Z, v' = Y / Z
 
-def process_centers(centers):
-    """
-    处理多个像素坐标，并返回相机坐标系下的归一化坐标
-    :param centers: 像素坐标数组，形状为 (N, 2)，其中 N 是像素点的数量
-    :return: 相机坐标系下的归一化坐标数组，形状为 (N, 3)
-    """
-    camera_coords = []
+    # 去畸变后的像素坐标是 (u', v')
+    normalized_coords = undistorted_points.reshape(-1, 2)
+
+    # 反求相机坐标系的 X, Y, Z
+    # 假设 Z=1，因为相机坐标系中没有给定深度信息。需要根据实际情况调整深度。
+    Z = np.ones(normalized_coords.shape[0])
+    X = normalized_coords[:, 0]
+    Y = normalized_coords[:, 1]
+    for i in range(len(Z)):
+        k = h / Y[i]
+        X[i] = X[i] * k
+        Y[i] = h
+        Z[i] = Z[i] * k  
+
+    camera_coords = np.column_stack((X, Y, Z))
     
-    for center in centers:
-        x_pixel, y_pixel = center
-        camera_coords.append(pixel_to_camera_coordinates(x_pixel, y_pixel))
-    
-    # 返回一个 (N, 3) 的数组，表示 N 个像素点在相机坐标系下的归一化坐标
-    return np.array(camera_coords)
+    return camera_coords
