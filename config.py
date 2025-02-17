@@ -2,20 +2,24 @@ import numpy as np
 import serial
 import struct
 
-# 配置串口参数
-SER = serial.Serial(
-    port='/dev/ttyACM0',        # 设置串口设备，根据你的树莓派配置可能是 /dev/ttyAMA0 或 /dev/ttyUSB0
-    baudrate=115200,            # 设置波特率
-    parity=serial.PARITY_NONE,  # 设置校验位
-    stopbits=serial.STOPBITS_ONE,  # 设置停止位
-    bytesize=8,                 # 设置数据位
-    timeout=1                    # 设置读取超时
-)
+# 串口开关
+PORT = False
+
+if PORT:
+    # 配置串口参数
+    SER = serial.Serial(
+        port='/dev/ttyACM0',        # 设置串口设备，根据你的树莓派配置可能是 /dev/ttyAMA0 或 /dev/ttyUSB0
+        baudrate=115200,            # 设置波特率
+        parity=serial.PARITY_NONE,  # 设置校验位
+        stopbits=serial.STOPBITS_ONE,  # 设置停止位
+        bytesize=8,                 # 设置数据位
+        timeout=1                    # 设置读取超时
+    )
 
 # 用户名
 USERNAME = "patience"
 
-SOURCE_TYPE = "camera"  # "video" "image" "camera"
+SOURCE_TYPE = "image"  # "video" "image" "camera"
 BALL_MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/ball/color_best.pt"
 ZONE_MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/zone/best.pt"
 

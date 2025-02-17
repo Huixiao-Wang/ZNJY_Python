@@ -48,11 +48,6 @@ def pixel_to_camera_coordinates(pixel_coords):
     Z = np.ones(normalized_coords.shape[0])
     X = normalized_coords[:, 0]
     Y = normalized_coords[:, 1]
-    for i in range(len(Z)):
-        k = h / Y[i]
-        X[i] = X[i] * k
-        Y[i] = h
-        Z[i] = Z[i] * k  
 
     camera_coords = np.column_stack((X, Y, Z))
     
