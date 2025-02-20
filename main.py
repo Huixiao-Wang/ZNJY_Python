@@ -9,6 +9,9 @@ import config
 import pix2cam
 import rotation
 import multiple
+import target
+import arrange
+import numpy as np
 import cv2
 
 if config.PORT:
@@ -23,15 +26,17 @@ def process_and_send_data(input_queue):
         print("静态模式")
         while True:
             # -----图片模式----- #
-            
+            # 获取欧拉角
             if config.PORT:
                 # 从队列中获取数据
                 angles = input_queue.get()
                 print("Received data from queue:", angles)
             else:
                 angles = [0., 0., 0.]
+            
             # 读取图片
             frame = cv2.imread(config.SOURCE_PATH)
+            frame = cv2.resize(frame, (640, 640))
             # 进行目标检测
             centers, classes, frame = infer.infer_yolo(frame, MODEL_TYPE)
             # 将像素坐标转换为相机坐标
@@ -40,25 +45,43 @@ def process_and_send_data(input_queue):
             vectors = rotation.rotate(camera_coordinates, -angles[1], -angles[0], 0)
             # 将世界坐标转换为实际坐标
             vectors = multiple.mult(vectors)
-            print("检测到的ROI中心点：", centers)
-            print("检测到的ROI类别：", classes)
-            print("相机坐标：", camera_coordinates)
-            print("世界坐标：", vectors)
+            # 将检测到的目标封装成 target 对象
+            targets = []
+            for i in range(len(vectors)):
+                targets.append(target.target(vectors[i], classes[i]))    
+            # 按距离排序
+            targets = arrange.sort_targets(targets)
+            # 打印排序后的目标信息
+            for i in range(len(targets)):
+                print(targets[i])
             
+            # print("检测到的ROI中心点：", centers)
+            # print("检测到的ROI类别：", classes)
+            # print("相机坐标：", camera_coordinates)
+            # print("世界坐标：", vectors)
+            
+            # 在图像上标注目标信息
             for i in range(len(centers)):
                 frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             
-            data = [vectors[0][0], vectors[0][1], vectors[0][2]] # 从相机坐标中提取 x, y, z
+            # 发送数据
+            data = targets[0].vector  # 发送最近的目标数据
             print("发送的数据：", data)
             if config.PORT:
                 # 构造数据包
                 packet = message.create_packet(data)
                 ser.write(packet)  # 编码为字节串后发送
+            
             # 按 'q' 键或者 'Esc' 键退出
             if cv2.waitKey(1) & 0xFF in [ord('q'), 27]:
                 break
-            cv2.imshow("Result", frame)
-            cv2.waitKey(0)
+            
+            # 显示图像
+            if config.USERNAME == 'pi':
+                cv2.imwrite("./result.jpg", frame)
+            else:    
+                cv2.imshow("Result", frame)
+            # cv2.waitKey(0)
             cv2.destroyAllWindows()
     
     # -----视频流模式----- #
@@ -72,19 +95,21 @@ def process_and_send_data(input_queue):
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
         # 设置自动曝光
         cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
-        
+    
     # 计算实际帧速率
     frame_count = 0
     start_time = time.time()
     
     while cap.isOpened():
         
+        # 获取欧拉角
         if config.PORT:
             # 从队列中获取数据
             angles = input_queue.get()
             print("Received data from queue:", angles)
         else:
             angles = [0., 0., 0.]
+        
         # 读取视频流
         ret, frame = cap.read()
         frame = cv2.resize(frame, (640, 640))
@@ -99,6 +124,7 @@ def process_and_send_data(input_queue):
         
         # 进行目标检测
         centers, classes, frame = infer.infer_yolo(frame, MODEL_TYPE)
+        # 如果没有检测到目标，则发送空数据
         if len(centers) == 0 or centers is None:
             if config.PORT:
                 # 构造数据包
@@ -111,7 +137,12 @@ def process_and_send_data(input_queue):
             if elapsed_time > 0:
                 fps = frame_count / elapsed_time
                 print(f"Actual FPS: {fps:.2f}")
-            cv2.imshow("Result", frame)
+                
+            if config.USERNAME == 'pi':
+                cv2.imwrite("./result.jpg", frame)
+            else:    
+                cv2.imshow("Result", frame)
+            
             continue
         
         # 将像素坐标转换为相机坐标
@@ -120,23 +151,39 @@ def process_and_send_data(input_queue):
         vectors = rotation.rotate(camera_coordinates, -angles[1], -angles[0], 0)
         # 将世界坐标转换为实际坐标
         vectors = multiple.mult(vectors)
-        print("检测到的ROI中心点：", centers)
-        print("检测到的ROI类别：", classes)
-        print("相机坐标：", camera_coordinates)
-        print("世界坐标：", vectors)
+        # 将检测到的目标封装成 target 对象
+        targets = []
+        for i in range(len(vectors)):
+            targets.append(target.target(vectors[i], classes[i]))    
+        # 按距离排序
+        targets = arrange.sort_targets(targets)
+        # 打印排序后的目标信息
+        for i in range(len(targets)):
+            print(targets[i])
         
+        # print("检测到的ROI中心点：", centers)
+        # print("检测到的ROI类别：", classes)
+        # print("相机坐标：", camera_coordinates)
+        # print("世界坐标：", vectors)
+        
+        # 在图像上标注目标信息
         for i in range(len(centers)):
             frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         
-        data = [vectors[0][0], vectors[0][1], vectors[0][2]] # 从相机坐标中提取 x, y, z
+        data = targets[0].vector  # 发送最近的目标数据
         print("发送的数据：", data)
         
+        # 发送数据
         if config.PORT:
             # 构造数据包
             packet = message.create_packet(data)
             ser.write(packet)  # 编码为字节串后发送
         
-        cv2.imshow("Result", frame)
+        # 显示图像
+        if config.USERNAME == 'pi':
+            cv2.imwrite("./result.jpg", frame)
+        else:    
+            cv2.imshow("Result", frame)
         
         frame_count += 1            
         # 计算并显示实际帧率
@@ -158,16 +205,16 @@ def read_data(input_queue):
             data = ser.read(ser.in_waiting)  # 读取所有可用的数据
 
             # 检查接收到的数据是否包含完整的浮动数据（假设每个浮动数由4个字节组成，3个浮动数共12字节）
-            if len(data) >= 8:
+            if len(data) >= 9:
                 # 将字节数据转换为浮动数
-                pitch, roll = struct.unpack('ff', data[:8])  # 'fff' 表示三个 4 字节浮动数
+                pitch, roll, flag = struct.unpack('ffB', data[:9])  # 'fff' 表示三个 4 字节浮动数
                 # 将接收到的三个浮动数放入队列
-                input_queue.put((pitch, roll))
-                print(f"Received pitch: {pitch}, roll: {roll}")
+                input_queue.put((pitch, roll, flag))
+                print(f"Received pitch: {pitch}, roll: {roll}, flag: {flag}")
             
             else:
                 # 如果数据不完整，则放入默认值 0
-                input_queue.put((0, 0))
+                input_queue.put((0, 0, 0))
                 print("Incomplete data received.")
         
         time.sleep(0.001)  # 每 1 毫秒检查一次串口是否有数据

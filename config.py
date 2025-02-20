@@ -19,7 +19,7 @@ if PORT:
 # 用户名
 USERNAME = "patience"
 
-SOURCE_TYPE = "image"  # "video" "image" "camera"
+SOURCE_TYPE = "camera"  # "video" "image" "camera"
 BALL_MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/ball/color_best.pt"
 ZONE_MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/zone/best.pt"
 
@@ -44,13 +44,22 @@ if SOURCE_TYPE == "video":
     print("视频路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "image":
     # 图片模式
-    SOURCE_PATH = f"/home/{USERNAME}/ZNJY_Python/src/ball_0001.jpg"
+    SOURCE_PATH = f"/home/{USERNAME}/ZNJY_Python/src/color_0189.jpg"
     # 显示信息
     print("图片模式")
     print("图片路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "camera":
     # 摄像头模式
-    SOURCE_PATH = 2
+    SOURCE_PATH = 0
     # 显示信息
     print("摄像头模式")
     print("摄像头编号：", SOURCE_PATH)
+
+DICTIONARY = {
+    0: "red",
+    1: "blue",
+    2: "yellow",
+    3: "black",
+    4: "bluezone",
+    5: "redzone"
+}
