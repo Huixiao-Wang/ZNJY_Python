@@ -1,146 +1,71 @@
 import cv2
 import numpy as np
 import onnxruntime as ort
-import time
 
-# 设置模式
-# MODE = "VIDEOSTREAM"  # 视频流模式
-VIDEOPATH = 2
+# 加载ONNX模型
+def load_model(model_path):
+    session = ort.InferenceSession(model_path)
+    return session
 
-MODE = "PICTURE"  # 图片模式
-PICTUREPATH = "src/test.jpg"
+# 对图像进行预处理（根据模型的输入要求进行调整）
+def preprocess_image(image_path, input_size=(640, 640)):
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # 转换为RGB
+    image = cv2.resize(image, input_size)  # 调整大小
+    image = np.transpose(image, (2, 0, 1))  # HWC -> CHW
+    image = image.astype(np.float32)  # 转为浮点数
+    image = np.expand_dims(image, axis=0)  # 添加batch维度
+    image /= 255.0  # 归一化
+    return image
 
-# 用户名
-USERNAME = "patience"
+# 获取模型的输入和输出
+def get_model_input_output(session):
+    input_name = session.get_inputs()[0].name
+    output_name = session.get_outputs()[0].name
+    return input_name, output_name
 
-# 模型路径（量化后的 ONNX 模型）
-color_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/best_quantized.onnx"
-ball_model_path = f"/home/{USERNAME}/ZNJY_Python/model/ball/best_quantized.onnx"
+# 进行推理
+def infer(model_session, input_name, output_name, image):
+    result = model_session.run([output_name], {input_name: image})
+    return result[0]
 
-# 选择推理设备（树莓派 4B 仅支持 CPU）
-providers = ['CPUExecutionProvider']
-
-# 加载 ONNX 量化模型
-color_model_session = ort.InferenceSession(color_model_path, providers=providers)
-ball_model_session = ort.InferenceSession(ball_model_path, providers=providers)
-
-# 获取 ONNX 输入名称
-color_input_name = color_model_session.get_inputs()[0].name
-ball_input_name = ball_model_session.get_inputs()[0].name
-
-# 计算 IOU（交并比）
-def compute_iou(box1, box2):
-    x1, y1, x2, y2 = box1
-    x1g, y1g, x2g, y2g = box2
-
-    xi1 = max(x1, x1g)
-    yi1 = max(y1, y1g)
-    xi2 = min(x2, x2g)
-    yi2 = min(y2, y2g)
-    inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
-
-    box1_area = (x2 - x1) * (y2 - y1)
-    box2_area = (x2g - x1g) * (y2g - y1g)
+# 将推理结果标注到图片上
+def draw_label(image_path, label, confidence, output_image_path="output.jpg"):
+    image = cv2.imread(image_path)
+    label_text = f"{label}: {confidence:.2f}"
     
-    union_area = box1_area + box2_area - inter_area
-    return inter_area / union_area if union_area > 0 else 0
+    # 在图像上标注
+    cv2.putText(image, label_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+    cv2.imwrite(output_image_path, image)
 
-# 预处理输入图像
-def preprocess_image(frame):
-    img = cv2.resize(frame, (640, 640))  # 调整为 640x640
-    img = img.astype(np.float32) / 255.0  # 归一化
-    img = np.transpose(img, (2, 0, 1))  # HWC → CHW
-    img = np.expand_dims(img, axis=0)  # 增加 batch 维度
-    img = np.ascontiguousarray(img)  # 确保数据连续
-    return img
+def main(model_path, image_path):
+    # 加载模型
+    session = load_model(model_path)
 
-# 处理每一帧
-def process_frame(frame):
-    img = preprocess_image(frame)
+    # 获取模型输入和输出
+    input_name, output_name = get_model_input_output(session)
 
-    # 颜色检测
-    color_results = color_model_session.run(None, {color_input_name: img})
-    color_detections = np.array(color_results[0])  # 解析结果 (x1, y1, x2, y2, conf, class)
+    # 预处理图像
+    image = preprocess_image(image_path)
 
-    # 球体检测
-    ball_results = ball_model_session.run(None, {ball_input_name: img})
-    ball_detections = np.array(ball_results[0])  # 解析结果 (x1, y1, x2, y2, conf, class)
+    # 进行推理
+    result = infer(session, input_name, output_name, image)
+    print(result)
 
-    # 结果匹配
-    matched_results = []
-    for color_box in color_detections:
-        x1_c, y1_c, x2_c, y2_c, conf_c, class_c = color_box
+    # 假设是分类模型，结果是类别和置信度
+    predicted_class = np.argmax(result)
+    confidence = result[0][predicted_class]
 
-        for ball_box in ball_detections:
-            x1_b, y1_b, x2_b, y2_b, conf_b, class_b = ball_box
+    # 这里你可以根据模型类别获取标签
+    label = str(predicted_class)  # 如果有标签，替换为实际标签
 
-            iou = compute_iou((x1_c, y1_c, x2_c, y2_c), (x1_b, y1_b, x2_b, y2_b))
-            
-            if iou > 0.3:  # IOU 阈值
-                matched_results.append(((x1_c, y1_c, x2_c, y2_c), (x1_b, y1_b, x2_b, y2_b), class_c))
+    # 在图片上绘制结果
+    draw_label(image_path, label, confidence)
 
-    # 画框显示结果
-    for color_box, ball_box, color_class in matched_results:
-        x1, y1, x2, y2 = ball_box
-        dict_color = {0: "red", 1: "blue", 2: "yellow", 3: "black"}
-        color_name = f"{dict_color[int(color_class)]}-ball"
-                
-        cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-        cv2.putText(frame, color_name, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    print(f"Predicted Class: {label}, Confidence: {confidence:.2f}")
+    print(f"Output image saved as 'output.jpg'")
 
-    return frame
-
-# 处理单张图片
-if MODE == "PICTURE":
-    print("Processing picture...")
-    
-    # 读取图片
-    frame = cv2.imread(PICTUREPATH)
-    frame = cv2.resize(frame, (640, 640))
-    processed_frame = process_frame(frame)
-
-    cv2.imshow("Result", processed_frame)
-        
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-# 处理视频流
-if MODE == "VIDEOSTREAM":
-    print("Processing video stream...")
-    
-    cap = cv2.VideoCapture(VIDEOPATH)
-
-    # 设置照片格式
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-
-    # 设置自动曝光
-    cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
-
-    # 计算实际帧速率
-    frame_count = 0
-    start_time = time.time()
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        frame = cv2.resize(frame, (640, 640))
-        
-        if not ret:
-            print("Can't receive frame (stream end?).")
-            break
-        
-        frame_count += 1
-        processed_frame = process_frame(frame)
-        
-        # 计算并显示实际帧率
-        elapsed_time = time.time() - start_time
-        if elapsed_time > 0:
-            fps = frame_count / elapsed_time
-            print(f"Actual FPS: {fps:.2f}")
-        
-        cv2.imshow("Result", processed_frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+if __name__ == "__main__":
+    model_path = "/home/patience/ZNJY_Python/model/ball/best_half.onnx"  # 替换为你的ONNX模型路径
+    image_path = "/home/patience/ZNJY_Python/src/test.jpg"  # 替换为你要推理的图片路径
+    main(model_path, image_path)

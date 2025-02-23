@@ -4,7 +4,7 @@ import torch
 import config
 from ultralytics import YOLO
 
-def infer_yolo(image, model_type: str = 'ball'):
+def infer_yolo(image):
     """
     使用Ultralytics YOLO进行目标检测，并返回所有识别到的ROI的中心点。
     
@@ -12,16 +12,8 @@ def infer_yolo(image, model_type: str = 'ball'):
     :param model_type: 选择使用的YOLO模型类型
     :return: 检测到的ROI中心点列表 [(x1, y1), (x2, y2), ...] 以及检测结果
     """
-    # 根据传入参数加载不同的YOLO模型
-    model_paths = {
-        'ball': config.BALL_MODEL_PATH,  # 替换为你的第一个YOLO模型路径
-        'zone': config.ZONE_MODEL_PATH   # 替换为你的第二个YOLO模型路径
-    }
     
-    if model_type not in model_paths:
-        raise ValueError("Invalid model type.")
-    
-    model = YOLO(model_paths[model_type])
+    model = YOLO(config.MODEL_PATH)
     
     # 运行YOLO推理
     results = model(image)
@@ -38,7 +30,8 @@ def infer_yolo(image, model_type: str = 'ball'):
             
             x1, y1, x2, y2 = box.xyxy[0].tolist()  # 获取边界框坐标
             center_x = (x1 + x2) / 2
-            center_y = (y1 + y2) / 2
+            # center_y = (y1 + y2) / 2
+            center_y = y2
             center_x = int(center_x)
             center_y = int(center_y)
             roi_centers.append((center_x, center_y))

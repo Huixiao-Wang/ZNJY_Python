@@ -38,7 +38,7 @@ def process_and_send_data(input_queue):
             frame = cv2.imread(config.SOURCE_PATH)
             frame = cv2.resize(frame, (640, 640))
             # 进行目标检测
-            centers, classes, frame = infer.infer_yolo(frame, MODEL_TYPE)
+            centers, classes, frame = infer.infer_yolo(frame)
             # 将像素坐标转换为相机坐标
             camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
             # 将相机坐标转换为世界坐标

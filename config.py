@@ -19,9 +19,8 @@ if PORT:
 # 用户名
 USERNAME = "patience"
 
-SOURCE_TYPE = "camera"  # "video" "image" "camera"
-BALL_MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/ball/color_best.pt"
-ZONE_MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/zone/best.pt"
+SOURCE_TYPE = "image"  # "video" "image" "camera"
+MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/best_half.onnx"
 
 # 相机内参矩阵
 K = np.array([
@@ -44,7 +43,7 @@ if SOURCE_TYPE == "video":
     print("视频路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "image":
     # 图片模式
-    SOURCE_PATH = f"/home/{USERNAME}/ZNJY_Python/src/color_0189.jpg"
+    SOURCE_PATH = f"/home/{USERNAME}/ZNJY_Python/src/zone.jpg"
     # 显示信息
     print("图片模式")
     print("图片路径：", SOURCE_PATH)
