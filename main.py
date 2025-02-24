@@ -17,8 +17,6 @@ import cv2
 if config.PORT:
     ser = config.SER  # 串口对象
 
-MODEL_TYPE = 'ball'  # 'ball' or 'zone'
-
 # 处理图像
 def process_and_send_data(input_queue):
     
@@ -26,23 +24,38 @@ def process_and_send_data(input_queue):
         print("静态模式")
         while True:
             # -----图片模式----- #
-            # 获取欧拉角
+            # 获取欧拉角以及标志位
             if config.PORT:
                 # 从队列中获取数据
-                angles = input_queue.get()
-                print("Received data from queue:", angles)
+                receive = input_queue.get()
+                pitch, roll, flag = receive[0], receive[1], receive[2]
+                print(f"Received pitch: {pitch}, roll: {roll}, flag: {flag}")
             else:
-                angles = [0., 0., 0.]
+                pitch, roll, flag = 0., 0., 1
             
             # 读取图片
             frame = cv2.imread(config.SOURCE_PATH)
-            frame = cv2.resize(frame, (640, 640))
+            frame = cv2.resize(frame, (config.WIDTH, config.HEIGHT))
             # 进行目标检测
-            centers, classes, frame = infer.infer_yolo(frame)
+            centers, classes, frame = infer.infer_yolo(frame, flag)
+            # 如果没有检测到目标，则发送空数据
+            if len(centers) == 0 or centers is None:
+                if config.PORT:
+                    # 构造数据包
+                    packet = message.create_packet([0., 0., 0.])  # 发送空数据
+                    ser.write(packet)  # 编码为字节串后发送
+                    
+                if config.USERNAME == 'pi':
+                    cv2.imwrite("./result.jpg", frame)
+                else:    
+                    cv2.imshow("Result", frame)
+                
+                continue
+        
             # 将像素坐标转换为相机坐标
             camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
             # 将相机坐标转换为世界坐标
-            vectors = rotation.rotate(camera_coordinates, -angles[1], -angles[0], 0)
+            vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
             # 将世界坐标转换为实际坐标
             vectors = multiple.mult(vectors)
             # 将检测到的目标封装成 target 对象
@@ -79,7 +92,8 @@ def process_and_send_data(input_queue):
             # 显示图像
             if config.USERNAME == 'pi':
                 cv2.imwrite("./result.jpg", frame)
-            else:    
+            else:
+                cv2.imwrite("./result.jpg", frame)    
                 cv2.imshow("Result", frame)
             # cv2.waitKey(0)
             cv2.destroyAllWindows()
@@ -91,8 +105,8 @@ def process_and_send_data(input_queue):
         print("摄像头模式")
         # 设置照片格式
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.WIDTH)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.HEIGHT)
         # 设置自动曝光
         cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
     
@@ -102,17 +116,20 @@ def process_and_send_data(input_queue):
     
     while cap.isOpened():
         
-        # 获取欧拉角
+        # 获取欧拉角与标志位
         if config.PORT:
             # 从队列中获取数据
-            angles = input_queue.get()
-            print("Received data from queue:", angles)
+            receive = input_queue.get()
+            pitch, roll, flag = receive[0], receive[1], receive[2]
+            print(f"Received pitch: {pitch}, roll: {roll}, flag: {flag}")
         else:
-            angles = [0., 0., 0.]
+            pitch, roll, flag = 0., 0., 0
         
         # 读取视频流
         ret, frame = cap.read()
-        frame = cv2.resize(frame, (640, 640))
+        frame = cv2.resize(frame, (config.WIDTH, config.HEIGHT))
+        # 输出图像分辨率
+        print("图像分辨率：", frame.shape)
         
         if not ret:
             print("无法打开流")
@@ -123,7 +140,7 @@ def process_and_send_data(input_queue):
                 break
         
         # 进行目标检测
-        centers, classes, frame = infer.infer_yolo(frame, MODEL_TYPE)
+        centers, classes, frame = infer.infer_yolo(frame, flag)
         # 如果没有检测到目标，则发送空数据
         if len(centers) == 0 or centers is None:
             if config.PORT:
@@ -148,7 +165,7 @@ def process_and_send_data(input_queue):
         # 将像素坐标转换为相机坐标
         camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
         # 将相机坐标转换为世界坐标
-        vectors = rotation.rotate(camera_coordinates, -angles[1], -angles[0], 0)
+        vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
         # 将世界坐标转换为实际坐标
         vectors = multiple.mult(vectors)
         # 将检测到的目标封装成 target 对象

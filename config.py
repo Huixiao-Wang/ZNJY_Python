@@ -2,6 +2,9 @@ import numpy as np
 import serial
 import struct
 
+# 队伍颜色
+COLOR = 1  # 0: red 1: blue
+
 # 串口开关
 PORT = False
 
@@ -20,8 +23,18 @@ if PORT:
 USERNAME = "patience"
 
 SOURCE_TYPE = "image"  # "video" "image" "camera"
-MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/best_half.onnx"
 
+# 设置分辨率
+SIZE = 320
+
+# 相机分辨率
+WIDTH = SIZE
+HEIGHT = SIZE
+
+# 模型路径
+MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/{SIZE}/best_ncnn_model"
+
+# 长线相机
 # 相机内参矩阵
 K = np.array([
     [337.16016297 , 0.           , 281.24908569],
@@ -31,6 +44,18 @@ K = np.array([
 
 # 畸变系数
 DISTORTION_COEFFS = np.array([-1.71631273e-01, 1.42053851e+00, 1.57306392e-03, -5.69209404e-03, -2.60624378e+00])
+
+# 短线相机
+# # 相机内参矩阵
+# K = np.array([
+#     [676.25954191 , 0.           , 321.04263929],
+#     [0.           , 919.68532853 , 322.36998648],
+#     [0.           , 0.           , 1.          ]
+# ])
+
+# # 畸变系数
+# DISTORTION_COEFFS = np.array([-0.57196834,  -0.5764982, 0.01623252,  -0.0201935, 3.87492286])
+
 
 # 相机高度
 H = 150
