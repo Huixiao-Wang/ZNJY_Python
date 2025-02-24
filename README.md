@@ -2,7 +2,7 @@
 ---
 
 ### Ultralytics 源码修改
-![./fixed.png]
+![fixed](./fixed.png)
 
 ### Python 环境配置
 - 安装 miniconda
