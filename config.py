@@ -31,15 +31,18 @@ SIZE = 320
 WIDTH = SIZE
 HEIGHT = SIZE
 
+# 缩放比率
+K = SIZE / 640
+
 # 模型路径
-MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/{SIZE}/best_ncnn_model"
+MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/{SIZE}/11n/best_ncnn_model"
 
 # 长线相机
 # 相机内参矩阵
 K = np.array([
-    [337.16016297 , 0.           , 281.24908569],
-    [0.           , 450.57415788 , 310.57172501],
-    [0.           , 0.           , 1.          ]
+    [K * 337.16016297 , K * 0.           , K * 281.24908569],
+    [K * 0.           , K * 450.57415788 , K * 310.57172501],
+    [K * 0.           , K * 0.           , 1.              ]
 ])
 
 # 畸变系数

@@ -2,14 +2,15 @@ import cv2
 import numpy as np
 import torch
 import config
+import time
 from ultralytics import YOLO
 
-def infer_yolo(image, flag = 0):
+def infer_yolo(image, flag = 1):
     """
     使用Ultralytics YOLO进行目标检测, 并返回所有识别到的ROI的中心点。
     
     :param image: 输入图像路径
-    :param flag: 0表示检测ball, 1表示检测zone
+    :param flag: 1表示检测ball, 0表示检测zone
     :return: 检测到的ROI中心点列表 [(x1, y1), (x2, y2), ...] 以及检测结果
     """
     
@@ -73,11 +74,13 @@ def infer_yolo(image, flag = 0):
                 cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
     
     # ball
-    if flag == 0:
+    if flag == 1:
+        print("ball mode")
         roi_centers = np.array(ball_centers)
         classes = np.array(ball_classes)
         return roi_centers, classes, image
     
+    print("zone mode")
     # zone
     # 存储ROI中心点
     roi_centers = []

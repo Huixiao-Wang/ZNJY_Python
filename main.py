@@ -28,10 +28,10 @@ def process_and_send_data(input_queue):
             if config.PORT:
                 # 从队列中获取数据
                 receive = input_queue.get()
-                pitch, roll, flag = receive[0], receive[1], receive[2]
-                print(f"Received pitch: {pitch}, roll: {roll}, flag: {flag}")
+                roll, pitch, flag = receive[0], receive[1], receive[2]
+                print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
             else:
-                pitch, roll, flag = 0., 0., 1
+                roll, pitch, flag = 0., 0., 1
             
             # 读取图片
             frame = cv2.imread(config.SOURCE_PATH)
@@ -120,16 +120,14 @@ def process_and_send_data(input_queue):
         if config.PORT:
             # 从队列中获取数据
             receive = input_queue.get()
-            pitch, roll, flag = receive[0], receive[1], receive[2]
-            print(f"Received pitch: {pitch}, roll: {roll}, flag: {flag}")
+            roll, pitch, flag = receive[0], receive[1], receive[2]
+            print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
         else:
-            pitch, roll, flag = 0., 0., 0
+            roll, pitch, flag = 0., 0., 1
         
         # 读取视频流
         ret, frame = cap.read()
         frame = cv2.resize(frame, (config.WIDTH, config.HEIGHT))
-        # 输出图像分辨率
-        print("图像分辨率：", frame.shape)
         
         if not ret:
             print("无法打开流")
@@ -145,7 +143,7 @@ def process_and_send_data(input_queue):
         if len(centers) == 0 or centers is None:
             if config.PORT:
                 # 构造数据包
-                packet = message.create_packet([0., 0., 0.])  # 发送空数据
+                packet = message.create_packet([-1., -1., -1.])  # 发送空数据
                 ser.write(packet)  # 编码为字节串后发送
             
             frame_count += 1
@@ -224,10 +222,10 @@ def read_data(input_queue):
             # 检查接收到的数据是否包含完整的浮动数据（假设每个浮动数由4个字节组成，3个浮动数共12字节）
             if len(data) >= 9:
                 # 将字节数据转换为浮动数
-                pitch, roll, flag = struct.unpack('ffB', data[:9])  # 'fff' 表示三个 4 字节浮动数
+                roll, pitch, flag = struct.unpack('ffB', data[:9])  # 'fff' 表示三个 4 字节浮动数
                 # 将接收到的三个浮动数放入队列
-                input_queue.put((pitch, roll, flag))
-                print(f"Received pitch: {pitch}, roll: {roll}, flag: {flag}")
+                input_queue.put((roll / 180 * np.pi, pitch / 180 * np.pi, flag))
+                print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
             
             else:
                 # 如果数据不完整，则放入默认值 0
