@@ -31,7 +31,7 @@ def process_and_send_data(input_queue):
                 roll, pitch, flag = receive[0], receive[1], receive[2]
                 print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
             else:
-                roll, pitch, flag = 0., 0., 1
+                roll, pitch, flag = 15. / 180 * np.pi, 0., 1
             
             # 读取图片
             frame = cv2.imread(config.SOURCE_PATH)
@@ -42,7 +42,7 @@ def process_and_send_data(input_queue):
             if len(centers) == 0 or centers is None:
                 if config.PORT:
                     # 构造数据包
-                    packet = message.create_packet([0., 0., 0.])  # 发送空数据
+                    packet = message.create_packet([-1., -1., -1.])  # 发送空数据
                     ser.write(packet)  # 编码为字节串后发送
                     
                 if config.USERNAME == 'pi':
@@ -54,10 +54,13 @@ def process_and_send_data(input_queue):
         
             # 将像素坐标转换为相机坐标
             camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
+            print(camera_coordinates)
             # 将相机坐标转换为世界坐标
             vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
+            print(vectors)
             # 将世界坐标转换为实际坐标
             vectors = multiple.mult(vectors)
+            print(vectors)
             # 将检测到的目标封装成 target 对象
             targets = []
             for i in range(len(vectors)):
@@ -73,9 +76,9 @@ def process_and_send_data(input_queue):
             # print("相机坐标：", camera_coordinates)
             # print("世界坐标：", vectors)
             
-            # 在图像上标注目标信息
-            for i in range(len(centers)):
-                frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            # # 在图像上标注目标信息
+            # for i in range(len(centers)):
+            #     frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             
             # 发送数据
             data = targets[0].vector  # 发送最近的目标数据
@@ -123,7 +126,7 @@ def process_and_send_data(input_queue):
             roll, pitch, flag = receive[0], receive[1], receive[2]
             print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
         else:
-            roll, pitch, flag = 0., 0., 1
+            roll, pitch, flag = 15 / 180 * np.pi, 0., 1
         
         # 读取视频流
         ret, frame = cap.read()
@@ -162,10 +165,13 @@ def process_and_send_data(input_queue):
         
         # 将像素坐标转换为相机坐标
         camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
+        # print("camera", camera_coordinates)
         # 将相机坐标转换为世界坐标
         vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
+        # print("rcamera",vectors)
         # 将世界坐标转换为实际坐标
         vectors = multiple.mult(vectors)
+        # print("world",vectors)
         # 将检测到的目标封装成 target 对象
         targets = []
         for i in range(len(vectors)):
@@ -181,9 +187,9 @@ def process_and_send_data(input_queue):
         # print("相机坐标：", camera_coordinates)
         # print("世界坐标：", vectors)
         
-        # 在图像上标注目标信息
-        for i in range(len(centers)):
-            frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        # # 在图像上标注目标信息
+        # for i in range(len(centers)):
+        #     frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         
         data = targets[0].vector  # 发送最近的目标数据
         print("发送的数据：", data)
@@ -229,7 +235,7 @@ def read_data(input_queue):
             
             else:
                 # 如果数据不完整，则放入默认值 0
-                input_queue.put((0, 0, 0))
+                input_queue.put((15 / 180 * np.pi, 0, 1))
                 print("Incomplete data received.")
         
         time.sleep(0.001)  # 每 1 毫秒检查一次串口是否有数据

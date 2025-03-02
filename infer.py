@@ -31,7 +31,7 @@ def infer_yolo(image, flag = 1):
             # 过滤掉置信度较低的检测结果
             if box.conf < 0.5:
                 continue
-            if box.cls[0] > 3:
+            if int(box.cls[0]) > 3:
                 # 获取坐标
                 x1, y1, x2, y2 = box.xyxy[0].tolist()  # 获取边界框坐标
                 center_x = (x1 + x2) / 2
@@ -42,16 +42,16 @@ def infer_yolo(image, flag = 1):
                 zone_centers.append((center_x, center_y))
                 zone_classes.append(int(box.cls[0]))
                 zone_xy.append((x1,y1,x2,y2))
-                # 在图像上绘制检测框
-                cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
+                # # 在图像上绘制检测框
+                # cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                # cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
     # 解析ball
     for result in results:
         for box in result.boxes:
             # 过滤掉置信度较低的检测结果
             if box.conf < 0.5:
                 continue
-            if box.cls[0] <= 3 and box.cls[0] != (1-config.COLOR):
+            if int(box.cls[0]) <= 3 and int(box.cls[0]) != (1-config.COLOR):
                 # 获取坐标
                 x1, y1, x2, y2 = box.xyxy[0].tolist()  # 获取边界框坐标
                 # ball in zone?
@@ -69,9 +69,9 @@ def infer_yolo(image, flag = 1):
                 center_y = int(center_y)
                 ball_centers.append((center_x, center_y))
                 ball_classes.append(int(box.cls[0]))
-                # 在图像上绘制检测框
                 cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
                 cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
+                image = cv2.putText(image, f"{config.DICTIONARY[int(box.cls[0])]}", (center_x, center_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
     
     # ball
     if flag == 1:
