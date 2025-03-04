@@ -31,22 +31,22 @@ SIZE = 640
 WIDTH = SIZE
 HEIGHT = SIZE
 
-# 缩放比率
-KKK = SIZE / 640
+# # 缩放比率
+# KKK = SIZE / 640
 
 # 模型路径
 MODEL_PATH = f"./model/{SIZE}/11n/best.pt"
 
-# 640
-# 相机内参矩阵
-K = np.array([
-    [KKK * 389.1407 , KKK * 0.       , KKK * 308.8042],
-    [KKK * 0.       , KKK * 529.1912 , KKK * 307.8955],
-    [KKK * 0.       , KKK * 0.       , 1.            ]
-])
+# # 640
+# # 相机内参矩阵
+# K = np.array([
+#     [KKK * 389.291907056334 , KKK * 0.       , KKK * 309.904313963805],
+#     [KKK * 0.       , KKK * 524.065659268696 , KKK * 321.913286920233],
+#     [KKK * 0.       , KKK * 0.       , 1.            ]
+# ])
 
-# 畸变系数
-DISTORTION_COEFFS = np.array([0.0510, 0.3860, -0.8809, 0., 0.])
+# # 畸变系数
+# DISTORTION_COEFFS = np.array([0.157628688318473, -0.256514704420192, 0.0930423772352066, 0.00162845670018406, -0.00364984416697210], dtype=np.float32)
 
 # # 1920
 # # 相机内参矩阵
@@ -59,9 +59,10 @@ DISTORTION_COEFFS = np.array([0.0510, 0.3860, -0.8809, 0., 0.])
 # # 畸变系数
 # DISTORTION_COEFFS = np.array([0.0193, 0.3190, -1.0701, 0., 0.])
 
-
-# 相机高度
-H = 165
+# 单应性矩阵
+H = [[-1.23055770e+00, -4.40170809e-02,  4.00060160e+02],
+     [-1.63041577e-02, -1.45042710e-01, -4.49403769e+02],
+     [-4.22898865e-05, -5.46847576e-03,  1.00000000e+00]]
 
 if SOURCE_TYPE == "video":
     # 视频流模式
@@ -77,7 +78,7 @@ elif SOURCE_TYPE == "image":
     print("图片路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "camera":
     # 摄像头模式
-    SOURCE_PATH = 2
+    SOURCE_PATH = 0
     # 显示信息
     print("摄像头模式")
     print("摄像头编号：", SOURCE_PATH)

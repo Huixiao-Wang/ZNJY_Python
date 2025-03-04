@@ -6,11 +6,9 @@ import queue
 import message
 import infer
 import config
-import pix2cam
-import rotation
-import multiple
 import target
 import arrange
+import reflection
 import numpy as np
 import cv2
 
@@ -51,16 +49,10 @@ def process_and_send_data(input_queue):
                     cv2.imshow("Result", frame)
                 
                 continue
-        
-            # 将像素坐标转换为相机坐标
-            camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
-            # print(camera_coordinates)
-            # 将相机坐标转换为世界坐标
-            vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
+            # 像素坐标系到空间坐标系
+            vectors = reflection.pixel_to_world(centers)
             # print(vectors)
-            # 将世界坐标转换为实际坐标
-            vectors = multiple.mult(vectors)
-            # print(vectors)
+
             # 将检测到的目标封装成 target 对象
             targets = []
             for i in range(len(vectors)):
@@ -70,15 +62,6 @@ def process_and_send_data(input_queue):
             # 打印排序后的目标信息
             for i in range(len(targets)):
                 print(targets[i])
-            
-            # print("检测到的ROI中心点：", centers)
-            # print("检测到的ROI类别：", classes)
-            # print("相机坐标：", camera_coordinates)
-            # print("世界坐标：", vectors)
-            
-            # # 在图像上标注目标信息
-            # for i in range(len(centers)):
-            #     frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             
             # 发送数据
             data = targets[0].vector  # 发送最近的目标数据
@@ -159,37 +142,25 @@ def process_and_send_data(input_queue):
             if config.USERNAME == 'pi':
                 cv2.imwrite("./result.jpg", frame)
             else:    
-                cv2.imshow("Result", frame)
+                cv2.imwrite("./result.jpg", frame)
+                # cv2.imshow("Result", frame)
             
             continue
         
-        # 将像素坐标转换为相机坐标
-        camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
-        # print("camera", camera_coordinates)
-        # 将相机坐标转换为世界坐标
-        vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
-        # print("rcamera",vectors)
-        # 将世界坐标转换为实际坐标
-        vectors = multiple.mult(vectors)
-        # print("world",vectors)
+        # 像素坐标系到空间坐标系
+        vectors = reflection.pixel_to_world(centers)
+        print(vectors)
+
         # 将检测到的目标封装成 target 对象
         targets = []
         for i in range(len(vectors)):
-            targets.append(target.target(vectors[i], classes[i]))    
+            targets.append(target.target(vectors[i], classes[i]))
+        
         # 按距离排序
         targets = arrange.sort_targets(targets)
         # 打印排序后的目标信息
         for i in range(len(targets)):
             print(targets[i])
-        
-        # print("检测到的ROI中心点：", centers)
-        # print("检测到的ROI类别：", classes)
-        # print("相机坐标：", camera_coordinates)
-        # print("世界坐标：", vectors)
-        
-        # # 在图像上标注目标信息
-        # for i in range(len(centers)):
-        #     frame = cv2.putText(frame, f"({centers[i][0]}, {centers[i][1]}) -> ({camera_coordinates[i][0]:.2f}, {camera_coordinates[i][1]:.2f}, {camera_coordinates[i][2]:.2f})", (centers[i][0], centers[i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         
         data = targets[0].vector  # 发送最近的目标数据
         print("发送的数据：", data)
@@ -204,9 +175,10 @@ def process_and_send_data(input_queue):
         if config.USERNAME == 'pi':
             cv2.imwrite("./result.jpg", frame)
         else:    
-            cv2.imshow("Result", frame)
+            cv2.imwrite("./result.jpg", frame)
+            # cv2.imshow("Result", frame)
         
-        frame_count += 1            
+        frame_count += 1
         # 计算并显示实际帧率
         elapsed_time = time.time() - start_time
         if elapsed_time > 0:

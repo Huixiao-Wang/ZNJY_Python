@@ -21,11 +21,10 @@ pip install ultralytics opencv-python numpy torch torchvision matplotlib pyseria
 
 ### 使用说明
 - arrange.py 按距离排序
+- compute.py 通过地面棋盘格照片计算单应性矩阵，可以鼠标交互
 - config.py 储存配置信息
 - infer.py 推理模型并处理
 - main.py 主程序，双线程
 - message.py 读写串口
-- multiple.py 相机坐标系转换乘法
-- pix2cam.py 像素坐标系转换至相机坐标系
-- rotation.py 坐标系转换旋转矩阵
+- reflection.py 通过单应性矩阵，直接从像素坐标系转换至世界坐标系
 - target.py 目标类，包含坐标以及距离
