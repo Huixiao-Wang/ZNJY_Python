@@ -54,13 +54,13 @@ def process_and_send_data(input_queue):
         
             # 将像素坐标转换为相机坐标
             camera_coordinates = pix2cam.pixel_to_camera_coordinates(centers)
-            print(camera_coordinates)
+            # print(camera_coordinates)
             # 将相机坐标转换为世界坐标
             vectors = rotation.rotate(camera_coordinates, -roll, -pitch, 0)
-            print(vectors)
+            # print(vectors)
             # 将世界坐标转换为实际坐标
             vectors = multiple.mult(vectors)
-            print(vectors)
+            # print(vectors)
             # 将检测到的目标封装成 target 对象
             targets = []
             for i in range(len(vectors)):
