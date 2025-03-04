@@ -35,7 +35,7 @@ HEIGHT = SIZE
 KKK = SIZE / 640
 
 # 模型路径
-MODEL_PATH = f"/home/{USERNAME}/ZNJY_Python/model/{SIZE}/11n/best.pt"
+MODEL_PATH = f"./model/{SIZE}/11n/best.pt"
 
 # 640
 # 相机内参矩阵
@@ -65,13 +65,13 @@ H = 165
 
 if SOURCE_TYPE == "video":
     # 视频流模式
-    SOURCE_PATH = f"/home/{USERNAME}/ZNJY_Python/src/test.mp4"
+    SOURCE_PATH = f"./src/test.mp4"
     # 显示信息
     print("视频流模式")
     print("视频路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "image":
     # 图片模式
-    SOURCE_PATH = f"/home/{USERNAME}/ZNJY_Python/src/rule.jpg"
+    SOURCE_PATH = f"./src/rule.jpg"
     # 显示信息
     print("图片模式")
     print("图片路径：", SOURCE_PATH)
