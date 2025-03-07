@@ -24,11 +24,13 @@ def process_and_send_data(input_queue):
             # -----图片模式----- #
             # 获取欧拉角以及标志位
             if config.PORT:
+                print("---Port ON---")
                 # 从队列中获取数据
                 receive = input_queue.get()
                 roll, pitch, flag = receive[0], receive[1], receive[2]
-                print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
+                # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
             else:
+                print("---No Port---")
                 roll, pitch, flag = 15. / 180 * np.pi, 0., 1
             
             # 读取图片
@@ -65,11 +67,11 @@ def process_and_send_data(input_queue):
             
             # 发送数据
             data = targets[0].vector  # 发送最近的目标数据
-            print("发送的数据：", data)
             if config.PORT:
                 # 构造数据包
                 packet = message.create_packet(data)
                 ser.write(packet)  # 编码为字节串后发送
+                print("发送的数据：", packet)
             
             # 按 'q' 键或者 'Esc' 键退出
             if cv2.waitKey(1) & 0xFF in [ord('q'), 27]:
@@ -104,11 +106,13 @@ def process_and_send_data(input_queue):
         
         # 获取欧拉角与标志位
         if config.PORT:
+            print("---Port ON---")
             # 从队列中获取数据
             receive = input_queue.get()
             roll, pitch, flag = receive[0], receive[1], receive[2]
-            print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
+            # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
         else:
+            print("---No Port---")
             roll, pitch, flag = 15 / 180 * np.pi, 0., 1
         
         # 读取视频流
@@ -149,7 +153,8 @@ def process_and_send_data(input_queue):
         
         # 像素坐标系到空间坐标系
         vectors = reflection.pixel_to_world(centers)
-        print(vectors)
+        # vectors = np.array(vectors).astype(float)
+        # print("m",vectors)
 
         # 将检测到的目标封装成 target 对象
         targets = []
@@ -163,12 +168,13 @@ def process_and_send_data(input_queue):
             print(targets[i])
         
         data = targets[0].vector  # 发送最近的目标数据
-        print("发送的数据：", data)
+        float_data = [np.float32(data[0]), np.float32(data[1]), 165.]
+        print("发送的数据：", float_data)
         
         # 发送数据
         if config.PORT:
             # 构造数据包
-            packet = message.create_packet(data)
+            packet = message.create_packet(float_data)
             ser.write(packet)  # 编码为字节串后发送
         
         # 显示图像
@@ -203,7 +209,7 @@ def read_data(input_queue):
                 roll, pitch, flag = struct.unpack('ffB', data[:9])  # 'fff' 表示三个 4 字节浮动数
                 # 将接收到的三个浮动数放入队列
                 input_queue.put((roll / 180 * np.pi, pitch / 180 * np.pi, flag))
-                print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
+                # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
             
             else:
                 # 如果数据不完整，则放入默认值 0
