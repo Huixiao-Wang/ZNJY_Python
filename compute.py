@@ -36,7 +36,7 @@ def main(image_path):
     H, image = initialize_homography(image_path)
     if H is None:
         return
-
+    print(H)
     # 鼠标交互回调函数
     def mouse_callback(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -54,4 +54,4 @@ def main(image_path):
     cv2.destroyAllWindows()
 
 # 示例调用
-# main("result.jpg")
+main("result.jpg")
