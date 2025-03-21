@@ -53,5 +53,24 @@ def main(image_path):
 
     cv2.destroyAllWindows()
 
+
 # 示例调用
-main("result.jpg")
+SIZE = 180
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, SIZE)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, SIZE)
+# 设置自动曝光
+cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        print("无法打开流")
+        break
+    frame = cv2.resize(frame, (SIZE, SIZE))
+    cv2.imshow("Camera", frame)
+    if cv2.waitKey(1) & 0xFF == 27:
+        break
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        cv2.imwrite("chessboard.jpg", frame)
+        main("chessboard.jpg")

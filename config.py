@@ -23,10 +23,10 @@ if PORT:
 USERNAME = "patience"
 
 # 源类型
-SOURCE_TYPE = "camera"  # "video" "image" "camera"
+SOURCE_TYPE = "image"  # "video" "image" "camera"
 
 # 设置分辨率
-SIZE = 320
+SIZE = 180
 
 # 相机分辨率
 WIDTH = SIZE
@@ -36,7 +36,7 @@ HEIGHT = SIZE
 # KKK = SIZE / 640
 
 # 模型路径
-MODEL_PATH = f"./model/{SIZE}/11n/best.pt"
+MODEL_PATH = f"./model/{SIZE}/v5n/best_ncnn_model"
 
 # # 640
 # # 相机内参矩阵
@@ -71,7 +71,12 @@ elif SIZE == 320:
     H =[[-2.68546973e+00,  5.86650724e-02,  4.18526674e+02],
         [-6.26790840e-03, -1.43151664e-01, -5.11597653e+02],
         [ 9.61943255e-05, -1.18425804e-02,  1.00000000e+00]]
-
+# 180
+elif SIZE == 180:
+    H =[[-4.39027003e+00,  7.67512906e-02,  3.80556609e+02],
+        [-2.90728200e-02, -1.37482774e-01, -4.73656539e+02],
+        [-6.36967666e-04, -1.94648988e-02,  1.00000000e+00]]
+    
 if SOURCE_TYPE == "video":
     # 视频流模式
     SOURCE_PATH = f"./src/test.mp4"
@@ -80,7 +85,7 @@ if SOURCE_TYPE == "video":
     print("视频路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "image":
     # 图片模式
-    SOURCE_PATH = f"./src/rule.jpg"
+    SOURCE_PATH = f"./src/chessboard180.jpg"
     # 显示信息
     print("图片模式")
     print("图片路径：", SOURCE_PATH)
