@@ -27,11 +27,14 @@ def process_and_send_data(input_queue):
                 print("---Port ON---")
                 # 从队列中获取数据
                 receive = input_queue.get()
-                roll, pitch, flag = receive[0], receive[1], receive[2]
-                # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
+                while not input_queue.empty():
+                    receive = input_queue.get()
+                # roll, pitch, flag = receive[0], receive[1], receive[2]
+                flag = receive[0]
+                print(f"Received flag: {flag}")
             else:
                 print("---No Port---")
-                roll, pitch, flag = 15. / 180 * np.pi, 0., 1
+                flag = 1
             
             # 读取图片
             frame = cv2.imread(config.SOURCE_PATH)
@@ -47,9 +50,9 @@ def process_and_send_data(input_queue):
                     
                 if config.USERNAME == 'pi':
                     cv2.imwrite("./result.jpg", frame)
-                else:    
-                    cv2.imshow("Result", frame)
-                
+                else:
+                    cv2.imwrite("./result.jpg", frame)
+                    
                 continue
             # 像素坐标系到空间坐标系
             vectors = reflection.pixel_to_world(centers)
@@ -81,8 +84,7 @@ def process_and_send_data(input_queue):
             if config.USERNAME == 'pi':
                 cv2.imwrite("./result.jpg", frame)
             else:
-                cv2.imwrite("./result.jpg", frame)    
-                cv2.imshow("Result", frame)
+                cv2.imwrite("./result.jpg", frame)
             # cv2.waitKey(0)
             cv2.destroyAllWindows()
     
@@ -98,9 +100,9 @@ def process_and_send_data(input_queue):
         # 设置自动曝光
         cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
     
-    # 计算实际帧速率
-    frame_count = 0
-    start_time = time.time()
+    # # 计算实际帧速率
+    # frame_count = 0
+    # start_time = time.time()
     
     while cap.isOpened():
         
@@ -109,11 +111,14 @@ def process_and_send_data(input_queue):
             print("---Port ON---")
             # 从队列中获取数据
             receive = input_queue.get()
-            roll, pitch, flag = receive[0], receive[1], receive[2]
-            # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
+            while not input_queue.empty():
+                receive = input_queue.get()
+            # roll, pitch, flag = receive[0], receive[1], receive[2]
+            flag = receive[0]
+            print(f"Received flag: {flag}")
         else:
             print("---No Port---")
-            roll, pitch, flag = 15 / 180 * np.pi, 0., 1
+            flag = 1
         
         # 读取视频流
         ret, frame = cap.read()
@@ -135,13 +140,6 @@ def process_and_send_data(input_queue):
                 # 构造数据包
                 packet = message.create_packet([-1., -1., -1.])  # 发送空数据
                 ser.write(packet)  # 编码为字节串后发送
-            
-            frame_count += 1
-            # 计算并显示实际帧率
-            elapsed_time = time.time() - start_time
-            if elapsed_time > 0:
-                fps = frame_count / elapsed_time
-                print(f"Actual FPS: {fps:.2f}")
                 
             if config.USERNAME == 'pi':
                 cv2.imwrite("./result.jpg", frame)
@@ -164,8 +162,8 @@ def process_and_send_data(input_queue):
         # 按距离排序
         targets = arrange.sort_targets(targets)
         # 打印排序后的目标信息
-        for i in range(len(targets)):
-            print(targets[i])
+        # for i in range(len(targets)):
+        #     print(targets[i])
         
         data = targets[0].vector  # 发送最近的目标数据
         float_data = [np.float32(data[0]), np.float32(data[1]), 165.]
@@ -184,12 +182,12 @@ def process_and_send_data(input_queue):
             cv2.imwrite("./result.jpg", frame)
             # cv2.imshow("Result", frame)
         
-        frame_count += 1
-        # 计算并显示实际帧率
-        elapsed_time = time.time() - start_time
-        if elapsed_time > 0:
-            fps = frame_count / elapsed_time
-            print(f"Actual FPS: {fps:.2f}")
+        # frame_count += 1
+        # # 计算并显示实际帧率
+        # elapsed_time = time.time() - start_time
+        # if elapsed_time > 0:
+        #     fps = frame_count / elapsed_time
+        #     print(f"Actual FPS: {fps:.2f}")
         
         # 按 'q' 键或者 'Esc' 键退出
         if cv2.waitKey(1) & 0xFF in [ord('q'), 27]:
@@ -203,17 +201,20 @@ def read_data(input_queue):
         if ser.in_waiting > 0:  # 如果串口缓冲区有数据
             data = ser.read(ser.in_waiting)  # 读取所有可用的数据
 
-            # 检查接收到的数据是否包含完整的浮动数据（假设每个浮动数由4个字节组成，3个浮动数共12字节）
-            if len(data) >= 9:
-                # 将字节数据转换为浮动数
-                roll, pitch, flag = struct.unpack('ffB', data[:9])  # 'fff' 表示三个 4 字节浮动数
-                # 将接收到的三个浮动数放入队列
-                input_queue.put((roll / 180 * np.pi, pitch / 180 * np.pi, flag))
-                # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
-            
+            # 检查接收到的数据是否包含完整的浮动数据
+            if len(data) >= 1:
+                # # 将字节数据转换为浮动数
+                # roll, pitch, flag = struct.unpack('ffB', data[:9])  # 'fff' 表示三个 4 字节浮动数
+                # # 将接收到的三个浮动数放入队列
+                # input_queue.put((roll / 180 * np.pi, pitch / 180 * np.pi, flag))
+                # # print(f"Received roll: {roll}, pitch: {pitch}, flag: {flag}")
+                flag = struct.unpack('B', data[:1])
+                input_queue.put((flag))
+                
             else:
                 # 如果数据不完整，则放入默认值 0
-                input_queue.put((15 / 180 * np.pi, 0, 1))
+                # input_queue.put((15 / 180 * np.pi, 0, 1))
+                input_queue.put((1))
                 print("Incomplete data received.")
         
         time.sleep(0.001)  # 每 1 毫秒检查一次串口是否有数据

@@ -55,8 +55,8 @@ def main(image_path):
 
 
 # 示例调用
-SIZE = 180
-cap = cv2.VideoCapture(0)
+SIZE = 192
+cap = cv2.VideoCapture(2)
 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, SIZE)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, SIZE)

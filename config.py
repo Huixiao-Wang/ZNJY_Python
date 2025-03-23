@@ -26,7 +26,7 @@ USERNAME = "patience"
 SOURCE_TYPE = "image"  # "video" "image" "camera"
 
 # 设置分辨率
-SIZE = 180
+SIZE = 192
 
 # 相机分辨率
 WIDTH = SIZE
@@ -36,7 +36,7 @@ HEIGHT = SIZE
 # KKK = SIZE / 640
 
 # 模型路径
-MODEL_PATH = f"./model/{SIZE}/v5n/best_ncnn_model"
+MODEL_PATH = f"./model/{SIZE}/11n/best_ncnn_model"
 
 # # 640
 # # 相机内参矩阵
@@ -76,6 +76,11 @@ elif SIZE == 180:
     H =[[-4.39027003e+00,  7.67512906e-02,  3.80556609e+02],
         [-2.90728200e-02, -1.37482774e-01, -4.73656539e+02],
         [-6.36967666e-04, -1.94648988e-02,  1.00000000e+00]]
+# 192
+elif SIZE == 192:
+    H =[[-4.32307626e+00,  -2.71427011e-02,  3.95379584e+02],
+        [1.03850386e-02, 1.58348241e-01, -5.18750407e+02],
+        [-4.84761492e-04, -1.90341007e-02,  1.00000000e+00]]
     
 if SOURCE_TYPE == "video":
     # 视频流模式
