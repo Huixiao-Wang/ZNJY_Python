@@ -10,6 +10,7 @@ FIRST = True
 
 # 第二次
 SECOND = True
+RECATCH = False
 
 # 串口开关
 PORT = False
@@ -102,7 +103,7 @@ elif SOURCE_TYPE == "image":
     print("图片路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "camera":
     # 摄像头模式
-    SOURCE_PATH = 0
+    SOURCE_PATH = 2
     # 显示信息
     print("摄像头模式")
     print("摄像头编号：", SOURCE_PATH)
