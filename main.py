@@ -162,8 +162,8 @@ def process_and_send_data(input_queue):
         # 按距离排序
         targets = arrange.sort_targets(targets)
         # 打印排序后的目标信息
-        # for i in range(len(targets)):
-        #     print(targets[i])
+        for i in range(len(targets)):
+            print(targets[i])
         
         data = targets[0].vector  # 发送最近的目标数据
         float_data = [np.float32(data[0]), np.float32(data[1]), 165.]

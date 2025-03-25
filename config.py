@@ -26,7 +26,7 @@ USERNAME = "patience"
 SOURCE_TYPE = "image"  # "video" "image" "camera"
 
 # 设置分辨率
-SIZE = 192
+SIZE = 640
 
 # 相机分辨率
 WIDTH = SIZE
@@ -36,7 +36,7 @@ HEIGHT = SIZE
 # KKK = SIZE / 640
 
 # 模型路径
-MODEL_PATH = f"./model/{SIZE}/11n/best_ncnn_model"
+MODEL_PATH = f"./model/{SIZE}/11n/best.pt"
 
 # # 640
 # # 相机内参矩阵
@@ -90,7 +90,7 @@ if SOURCE_TYPE == "video":
     print("视频路径：", SOURCE_PATH)
 elif SOURCE_TYPE == "image":
     # 图片模式
-    SOURCE_PATH = f"./src/chessboard180.jpg"
+    SOURCE_PATH = f"./src/test.jpg"
     # 显示信息
     print("图片模式")
     print("图片路径：", SOURCE_PATH)
@@ -109,3 +109,8 @@ DICTIONARY = {
     4: "bluezone",
     5: "redzone"
 }
+
+if COLOR == 0:
+    LABEL_PRIORITY = {2: 0, 3: 1, 0: 2, 5: 5}  # yellow black red redzone
+else:
+    LABEL_PRIORITY = {2: 0, 3: 1, 1: 2, 4: 5}  # yellow black blue bluezone
