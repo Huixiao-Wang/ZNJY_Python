@@ -42,16 +42,16 @@ def infer_yolo(image, flag = 1):
                 zone_centers.append((center_x, center_y))
                 zone_classes.append(int(box.cls[0]))
                 zone_xy.append((x1,y1,x2,y2))
-                # # 在图像上绘制检测框
-                # cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                # cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
+                # 在图像上绘制检测框
+                cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
     # 解析ball
     for result in results:
         for box in result.boxes:
             # 过滤掉置信度较低的检测结果
             if box.conf < 0.5:
                 continue
-            if config.FIRST and int(box.cls[0]) != config.COLOR:
+            if (config.FIRST or config.SECOND) and int(box.cls[0]) != config.COLOR:
                 continue
             if int(box.cls[0]) <= 3 and int(box.cls[0]) != (1-config.COLOR):
                 # 获取坐标

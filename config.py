@@ -8,6 +8,9 @@ COLOR = 0  # 0: red 1: blue
 # 第一次
 FIRST = True
 
+# 第二次
+SECOND = True
+
 # 串口开关
 PORT = False
 
@@ -26,10 +29,10 @@ if PORT:
 USERNAME = "patience"
 
 # 源类型
-SOURCE_TYPE = "image"  # "video" "image" "camera"
+SOURCE_TYPE = "camera"  # "video" "image" "camera"
 
 # 设置分辨率
-SIZE = 640
+SIZE = 192
 
 # 相机分辨率
 WIDTH = SIZE
@@ -39,7 +42,7 @@ HEIGHT = SIZE
 # KKK = SIZE / 640
 
 # 模型路径
-MODEL_PATH = f"./model/{SIZE}/11n/best.pt"
+MODEL_PATH = f"./model/{SIZE}/11n/best_ncnn_model"
 
 # # 640
 # # 相机内参矩阵
