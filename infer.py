@@ -51,6 +51,8 @@ def infer_yolo(image, flag = 1):
             # 过滤掉置信度较低的检测结果
             if box.conf < 0.5:
                 continue
+            if config.FIRST and int(box.cls[0]) != config.COLOR:
+                continue
             if int(box.cls[0]) <= 3 and int(box.cls[0]) != (1-config.COLOR):
                 # 获取坐标
                 x1, y1, x2, y2 = box.xyxy[0].tolist()  # 获取边界框坐标

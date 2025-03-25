@@ -115,7 +115,10 @@ def process_and_send_data(input_queue):
                 receive = input_queue.get()
             # roll, pitch, flag = receive[0], receive[1], receive[2]
             flag = receive[0]
+            if config.FIRST and flag == 0:
+                config.FIRST = False
             print(f"Received flag: {flag}")
+            print(f"First: {config.FIRST}")
         else:
             print("---No Port---")
             flag = 1

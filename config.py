@@ -5,6 +5,9 @@ import struct
 # 队伍颜色
 COLOR = 0  # 0: red 1: blue
 
+# 第一次
+FIRST = True
+
 # 串口开关
 PORT = False
 
